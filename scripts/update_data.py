@@ -12,32 +12,32 @@ resp = scraper.get(
 )
 soup = BeautifulSoup(resp.text, "html.parser")
 
-# === Parse stats table ===
 citations = hindex = i10index = 0
 citations_since = hindex_since = i10index_since = 0
 
 tbl = soup.find("table", id="gsc_rsb_st")
 if tbl:
-    cells = tbl.find_all("td", class_="gsc_rsb_sc")
-    nums = {}
-    for td in cells:
-        label_el = td.find("span", class_="gsc_rsb_a1")
-        val_el = td.find("span", class_="gsc_rsb_a2")
-        if label_el and val_el:
-            nums[label_el.get_text(strip=True)] = int(val_el.get_text(strip=True))
-    citations = nums.get("Citations", 0)
-    hindex = nums.get("h-index", 0)
-    i10index = nums.get("i10-index", 0)
+    for row in tbl.find_all("tr"):
+        label_el = row.find("td", class_="gsc_rsb_st")
+        if not label_el:
+            continue
+        label = label_el.get_text(strip=True)
+        val_cells = row.find_all("td", class_="gsc_rsb_sc")
+        vals = []
+        for td in val_cells:
+            try:
+                vals.append(int(td.get_text(strip=True)))
+            except ValueError:
+                vals.append(0)
+        if len(vals) < 2:
+            continue
+        if label == "Citations":
+            citations, citations_since = vals[0], vals[1]
+        elif label == "h-index":
+            hindex, hindex_since = vals[0], vals[1]
+        elif label == "i10-index":
+            i10index, i10index_since = vals[0], vals[1]
 
-    rows = tbl.find_all("tr")
-    if len(rows) >= 3:
-        s = rows[2].find_all("td")
-        if len(s) >= 3:
-            citations_since = int(s[0].get_text(strip=True))
-            hindex_since = int(s[1].get_text(strip=True))
-            i10index_since = int(s[2].get_text(strip=True))
-
-# === Parse citation histogram ===
 years = []
 hist = soup.find("div", class_="gsc_md_hist_b")
 if hist:
