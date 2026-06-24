@@ -64,7 +64,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     }).join('')}</div><div class="bars">${years.map(y => {
       const p = (y.c / ru) * 100 || 1;
       return `<div class="bar-wrap"><div class="bar" style="height:${p}%;background:#1a73e8"><div class="tip">${y.c}</div></div></div>`;
-    }).join('')}</div><div class="year-labels">${years.map(y => `<span>${String(y.y).slice(2)}</span>`).join('')}</div></div>`;
+    }).join('')}</div><div class="year-labels">${years.map(y => `<span>${y.y}</span>`).join('')}</div></div>`;
   } catch (e) {
     document.getElementById('content').innerHTML = `<div class="error">Gagal: ${e.message}</div>`;
   }
