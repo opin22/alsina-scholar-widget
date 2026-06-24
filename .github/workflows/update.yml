@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install scholarly
+      - run: pip install cloudscraper beautifulsoup4 lxml
       - run: python scripts/update_data.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
