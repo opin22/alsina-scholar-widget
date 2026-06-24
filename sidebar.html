@@ -7,23 +7,36 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:transparent;padding:0}
 .card{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);padding:12px}
-.header{margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #eee}
-.header h1{font-size:12px;color:#222;font-weight:600}
-.header .url{font-size:9px;color:#888;margin-top:1px}
+.header{margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #eee}
+.header h1{font-size:11px;color:#222;font-weight:600}
+.header .url{font-size:8px;color:#888;margin-top:1px}
 .header .url a{color:#1a73e8;text-decoration:none}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.stat{text-align:center;padding:8px 4px;background:#f8f9fa;border-radius:4px}
-.stat .num{font-size:20px;font-weight:700;color:#1a73e8;line-height:1.2}
-.stat .lbl{font-size:9px;color:#666;margin-top:2px}
-.footer{margin-top:8px;padding-top:6px;border-top:1px solid #eee;font-size:8px;color:#aaa;text-align:center}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}
+.stat{text-align:center;padding:2px;background:#f8f9fa;border-radius:3px}
+.stat .num{font-size:14px;font-weight:700;color:#1a73e8;line-height:1.2}
+.stat .lbl{font-size:7px;color:#666}
+.chart-wrap{position:relative;padding-top:8px;margin:0 0 0 24px}
+.y-axis{position:absolute;left:-24px;top:0;bottom:0;width:24px}
+.y-axis .yl{position:absolute;right:3px;font-size:7px;color:#999;transform:translateY(50%)}
+.y-axis .yln{position:absolute;left:24px;right:0;border-bottom:1px solid #eee;pointer-events:none}
+.bars{position:relative;height:80px;display:flex;align-items:flex-end;gap:2px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
+.bar{width:100%;border-radius:2px 2px 0 0;cursor:default;min-height:1px;transition:opacity .15s}
+.bar:hover{opacity:.8}
+.bar .tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:7px;padding:1px 3px;border-radius:2px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;margin-bottom:2px}
+.bar:hover .tip{opacity:1}
+.year-labels{display:flex;gap:2px;margin-top:1px}
+.year-labels span{flex:1;text-align:center;font-size:7px;color:#999}
+.footer{margin-top:4px;padding-top:3px;border-top:1px solid #eee;font-size:7px;color:#aaa;text-align:center}
 .footer a{color:#1a73e8;text-decoration:none}
-.loading{text-align:center;color:#999;padding:20px 0;font-size:11px}
+.loading{text-align:center;color:#999;padding:15px 0;font-size:10px}
+.error{color:#d32f2f;text-align:center;padding:10px;font-size:10px}
 </style>
 </head>
 <body>
 <div class="card">
   <div class="header">
-    <h1>Alsina</h1>
+    <h1>Alsina : Journal of Arabic Studies</h1>
     <div class="url"><a href="https://scholar.google.com/citations?user=TxioLDYAAAAJ" target="_blank">Google Scholar</a></div>
   </div>
   <div id="content"><div class="loading">Memuat…</div></div>
@@ -36,14 +49,24 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     document.getElementById('updated').textContent = d.updated || '—';
+    const years = d.years || [];
+    const mx = Math.max(...years.map(y => y.c), 1);
+    const ru = Math.ceil(mx / 50) * 50 || 100;
+    const st = [0, ru * 0.25, ru * 0.5, ru * 0.75, ru];
     document.getElementById('content').innerHTML = `<div class="stats">
       <div class="stat"><div class="num">${d.citations}</div><div class="lbl">Citations</div></div>
       <div class="stat"><div class="num">${d.hindex}</div><div class="lbl">h-index</div></div>
       <div class="stat"><div class="num">${d.i10index}</div><div class="lbl">i10-index</div></div>
       <div class="stat"><div class="num">${d.citations_since}</div><div class="lbl">Since 2021</div></div>
-    </div>`;
+    </div><div class="chart-wrap"><div class="y-axis">${st.map(s => {
+      const p = (s / ru) * 100;
+      return `<div class="yl" style="bottom:${p}%">${s}</div><div class="yln" style="bottom:${p}%"></div>`;
+    }).join('')}</div><div class="bars">${years.map(y => {
+      const p = (y.c / ru) * 100 || 1;
+      return `<div class="bar-wrap"><div class="bar" style="height:${p}%;background:#1a73e8"><div class="tip">${y.c}</div></div></div>`;
+    }).join('')}</div><div class="year-labels">${years.map(y => `<span>${String(y.y).slice(2)}</span>`).join('')}</div></div>`;
   } catch (e) {
-    document.getElementById('content').innerHTML = `Error: ${e.message}`;
+    document.getElementById('content').innerHTML = `<div class="error">Gagal: ${e.message}</div>`;
   }
 })();
 </script>
