@@ -17,35 +17,32 @@ citations_since = hindex_since = i10index_since = 0
 
 tbl = soup.find("table", id="gsc_rsb_st")
 if tbl:
-    print("=== ROWS ===", file=__import__('sys').stderr)
-    for i, row in enumerate(tbl.find_all("tr")):
-        cells = row.find_all("td")
-        print(f"Row {i}: {[c.get('class', '') for c in cells]} → {[c.get_text(strip=True) for c in cells]}", file=__import__('sys').stderr)
+    for row in tbl.find_all("tr"):
         label_el = row.find("td", class_="gsc_rsb_sc1")
-        if label_el:
-            label = label_el.get_text(strip=True)
-            val_cells = row.find_all("td", class_="gsc_rsb_std")
-            vals = []
-            for td in val_cells:
-                try:
-                    vals.append(int(td.get_text(strip=True)))
-                except ValueError:
-                    vals.append(0)
-            print(f"  → label='{label}' vals={vals}", file=__import__('sys').stderr)
-            if len(vals) >= 2:
-                if label == "Citations":
-                    citations, citations_since = vals[0], vals[1]
-                elif label == "h-index":
-                    hindex, hindex_since = vals[0], vals[1]
-                elif label == "i10-index":
-                    i10index, i10index_since = vals[0], vals[1]
+        if not label_el:
+            continue
+        label = label_el.get_text(strip=True)
+        val_cells = row.find_all("td", class_="gsc_rsb_std")
+        vals = []
+        for td in val_cells:
+            try:
+                vals.append(int(td.get_text(strip=True)))
+            except ValueError:
+                vals.append(0)
+        if len(vals) < 2:
+            continue
+        if label == "Citations":
+            citations, citations_since = vals[0], vals[1]
+        elif label == "h-index":
+            hindex, hindex_since = vals[0], vals[1]
+        elif label == "i10-index":
+            i10index, i10index_since = vals[0], vals[1]
 
 years = []
 hist = soup.find("div", class_="gsc_md_hist_b")
 if hist:
     bars = hist.find_all("a", class_=re.compile(r"gsc_g_a"))
     labels = hist.find_all("span", class_="gsc_g_t")
-    print(f"hist bars={len(bars)} labels={len(labels)}", file=__import__('sys').stderr)
     for bar, lab in zip(bars, labels):
         yr = int(lab.get_text(strip=True))
         cnt = int(bar.get_text(strip=True))
