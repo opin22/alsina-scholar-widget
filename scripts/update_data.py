@@ -1,4 +1,4 @@
-import cloudscraper, json, os
+import cloudscraper, re, json, os
 from datetime import date
 from bs4 import BeautifulSoup
 
@@ -12,42 +12,53 @@ resp = scraper.get(
 )
 soup = BeautifulSoup(resp.text, "html.parser")
 
-# Debug: print excerpts to find correct selectors
+citations = hindex = i10index = 0
+citations_since = hindex_since = i10index_since = 0
+
 tbl = soup.find("table", id="gsc_rsb_st")
 if tbl:
-    print("=== TABLE FOUND ===")
-    print(tbl.prettify()[:2000])
-else:
-    print("=== TABLE NOT FOUND ===")
-    # Find any table
-    for t in soup.find_all("table"):
-        print("TABLE:", t.get("id", ""), t.get("class", ""))
-    # search for citation numbers in the page
-    text = resp.text
-    import re
-    nums = re.findall(r'Citations[^0-9]*(\d+)', text)
-    print("Citations in text:", nums)
-    # search for gsc_rsb_st
-    if 'gsc_rsb_st' in text:
-        idx = text.index('gsc_rsb_st')
-        print("Context around gsc_rsb_st:", text[max(0,idx-200):idx+500])
+    for row in tbl.find_all("tr"):
+        label_el = row.find("td", class_="gsc_rsb_sc1")
+        if not label_el:
+            continue
+        label = label_el.get_text(strip=True)
+        val_cells = row.find_all("td", class_="gsc_rsb_std")
+        vals = []
+        for td in val_cells:
+            try:
+                vals.append(int(td.get_text(strip=True)))
+            except ValueError:
+                vals.append(0)
+        if len(vals) < 2:
+            continue
+        if label == "Citations":
+            citations, citations_since = vals[0], vals[1]
+        elif label == "h-index":
+            hindex, hindex_since = vals[0], vals[1]
+        elif label == "i10-index":
+            i10index, i10index_since = vals[0], vals[1]
 
+years = []
 hist = soup.find("div", class_="gsc_md_hist_b")
 if hist:
-    print("\n=== HISTOGRAM FOUND ===")
-    print(hist.prettify()[:1000])
-else:
-    print("\n=== HISTOGRAM NOT FOUND ===")
-    if 'gsc_md_hist_b' in resp.text:
-        idx = resp.text.index('gsc_md_hist_b')
-        print("Context:", resp.text[max(0,idx-200):idx+500])
+    bars = hist.find_all("a", class_=re.compile(r"gsc_g_a"))
+    labels = hist.find_all("span", class_="gsc_g_t")
+    for bar, lab in zip(bars, labels):
+        yr = int(lab.get_text(strip=True))
+        cnt = int(bar.get_text(strip=True))
+        years.append({"y": yr, "c": cnt})
+    years.sort(key=lambda x: x["y"])
 
-# Write default data so deploy doesn't break
 out = {
-    "citations": 0, "citations_since": 0,
-    "hindex": 0, "i10index": 0,
+    "citations": citations,
+    "citations_since": citations_since,
+    "hindex": hindex,
+    "i10index": i10index,
     "updated": date.today().isoformat(),
-    "years": [{"y": y, "c": 0} for y in range(2020, 2027)],
+    "years": years or [{"y": y, "c": 0} for y in range(2020, 2027)],
 }
+
 with open(DATA_FILE, "w", encoding="utf-8") as f:
     json.dump(out, f, ensure_ascii=False)
+
+print(f"OK: {json.dumps(out, ensure_ascii=False)}")
