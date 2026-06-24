@@ -1,14 +1,15 @@
-import cloudscraper, re, json, os, sys, time
+import json, os, sys, time
 from datetime import date
 from bs4 import BeautifulSoup
+from curl_cffi import requests
 
 SCHOLAR_ID = "TxioLDYAAAAJ"
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data.json")
 
 def scrape():
-    scraper = cloudscraper.create_scraper()
-    resp = scraper.get(
+    resp = requests.get(
         f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
+        impersonate="chrome",
         timeout=30,
     )
     soup = BeautifulSoup(resp.text, "html.parser")
@@ -40,7 +41,6 @@ def scrape():
         years.sort(key=lambda x: x["y"])
     return {"citations": c, "citations_since": cs, "hindex": h, "i10index": i10, "years": years}
 
-# Try up to 3 times
 for attempt in range(3):
     try:
         out = scrape()
@@ -53,11 +53,9 @@ for attempt in range(3):
             print(f"OK: {json.dumps(out)}")
             sys.exit(0)
         else:
-            print(f"Attempt {attempt+1}: got zeros, retrying...", file=sys.stderr)
+            print(f"Attempt {attempt+1}: got zeros", file=sys.stderr)
     except Exception as e:
         print(f"Attempt {attempt+1}: {e}", file=sys.stderr)
     time.sleep(5)
 
-# Fallback: keep existing data
-print("All attempts failed, keeping existing data", file=sys.stderr)
 sys.exit(1)
