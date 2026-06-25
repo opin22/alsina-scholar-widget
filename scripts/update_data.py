@@ -60,26 +60,32 @@ def scrape_sinta(scraper):
         print(f"SINTA scrape failed: {e}", file=sys.stderr)
     return result
 
+existing = load_existing()
+out = dict(existing)
+
 for attempt in range(3):
     try:
         scraper = cloudscraper.create_scraper()
         gs = scrape_gs(scraper)
         if gs["citations"] > 0:
-            existing = load_existing()
-            out = {**existing, **gs}
-            sinta = scrape_sinta(scraper)
-            out.update(sinta)
-            out["updated"] = date.today().isoformat()
-            if not out.get("years"):
-                out["years"] = [{"y": y, "c": 0} for y in range(2020, 2027)]
-            with open(DATA_FILE, "w", encoding="utf-8") as f:
-                json.dump(out, f, ensure_ascii=False, indent=2)
-            print(f"OK: citations={out['citations']} sinta_rank={out.get('sinta_rank','?')}")
-            sys.exit(0)
+            out.update(gs)
+            print(f"GS OK: citations={gs['citations']}")
+            break
         else:
-            print(f"Attempt {attempt+1}: got zeros", file=sys.stderr)
+            print(f"GS attempt {attempt+1}: got zeros", file=sys.stderr)
     except Exception as e:
-        print(f"Attempt {attempt+1}: {e}", file=sys.stderr)
+        print(f"GS attempt {attempt+1}: {e}", file=sys.stderr)
     time.sleep(5)
 
-print("Failed to fetch data, keeping existing", file=sys.stderr)
+sinta = scrape_sinta(cloudscraper.create_scraper())
+if sinta:
+    out.update(sinta)
+    print(f"SINTA OK: rank={sinta.get('sinta_rank','?')} impact={sinta.get('sinta_impact','?')}")
+
+out["updated"] = date.today().isoformat()
+if not out.get("years"):
+    out["years"] = [{"y": y, "c": 0} for y in range(2020, 2027)]
+
+with open(DATA_FILE, "w", encoding="utf-8") as f:
+    json.dump(out, f, ensure_ascii=False, indent=2)
+print(f"Done: citations={out['citations']} sinta_rank={out.get('sinta_rank','?')}")
