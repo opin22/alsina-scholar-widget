@@ -6,43 +6,23 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:transparent;display:flex;justify-content:center;padding:10px}
-.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.12);padding:20px;max-width:620px;width:100%}
-.hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:20px}
-.h-item{border-radius:6px;padding:10px 6px;text-align:center;color:#fff}
-.h-item .h-icon{font-size:18px;margin-bottom:2px}
-.h-item .h-val{font-size:20px;font-weight:700;line-height:1.2}
-.h-item .h-lbl{font-size:9px;opacity:.9;margin-top:1px}
+.card{background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.12);padding:20px;max-width:500px;width:100%}
+.hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+.h-item{border-radius:6px;padding:14px 6px;text-align:center;color:#fff}
+.h-item .h-icon{font-size:20px;margin-bottom:4px}
+.h-item .h-val{font-size:22px;font-weight:700;line-height:1.2}
+.h-item .h-lbl{font-size:9px;opacity:.9;margin-top:2px}
 .h-scopus{background:#0b6fa4}
 .h-sinta{background:#ca8e0a}
 .h-impact{background:#c0392b}
 .h-gs{background:#27ae60}
-.gs{margin-bottom:16px}
-.gs h2{font-size:14px;color:#222;font-weight:600;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e0e0e0}
-.stats{display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap}
-.stat{text-align:center}
-.stat .num{font-size:22px;font-weight:700;color:#1a73e8}
-.stat .lbl{font-size:11px;color:#666;margin-top:1px}
-.stat .sub{font-size:10px;color:#999}
-.chart-wrap{position:relative;padding-top:20px;margin:0 0 0 36px;min-height:200px}
-.y-axis{position:absolute;left:-36px;top:0;bottom:0;width:36px}
-.y-axis .yl{position:absolute;right:6px;font-size:10px;color:#777;transform:translateY(50%)}
-.y-axis .yln{position:absolute;left:36px;right:0;border-bottom:1px solid #eee;pointer-events:none}
-.bars{position:relative;height:160px;display:flex;align-items:flex-end;gap:5px}
-.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
-.bar{width:100%;max-width:48px;border-radius:3px 3px 0 0;transition:opacity .15s;cursor:default}
-.bar:hover{opacity:.85}
-.bar .tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;margin-bottom:3px}
-.bar:hover .tip{opacity:1}
-.year-labels{display:flex;gap:5px;margin-top:4px}
-.year-labels span{flex:1;text-align:center;font-size:10px;color:#777}
-.loading{text-align:center;color:#999;padding:40px 0;font-size:13px}
 .footer{margin-top:16px;padding-top:12px;border-top:1px solid #e0e0e0;font-size:10px;color:#999;text-align:center}
-.footer a{color:#1a73e8;text-decoration:none}
+.loading{text-align:center;color:#999;padding:40px 0;font-size:13px}
 .error{color:#d32f2f;text-align:center;padding:20px;font-size:13px}
 @media(max-width:480px){
   .hero{grid-template-columns:1fr 1fr;gap:6px}
-  .h-item{padding:8px 4px}
-  .h-item .h-val{font-size:17px}
+  .h-item{padding:10px 4px}
+  .h-item .h-val{font-size:18px}
   .h-item .h-lbl{font-size:8px}
 }
 </style>
@@ -50,9 +30,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <body>
 <div class="card">
   <div id="content"><div class="loading">Memuat data…</div></div>
-  <div class="footer">
-    Last updated: <span id="updated">—</span>
-  </div>
+  <div class="footer">Last updated: <span id="updated">—</span></div>
 </div>
 <script>
 (async () => {
@@ -61,12 +39,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     document.getElementById('updated').textContent = d.updated || '—';
-
-    const years = d.years || [];
-    const maxVal = Math.max(...years.map(y => y.c), 1);
-    const roundUp = Math.ceil(maxVal / 50) * 50 || 100;
-    const steps = [0, roundUp * 0.25, roundUp * 0.5, roundUp * 0.75, roundUp];
-
     document.getElementById('content').innerHTML = `
 <div class="hero">
   <div class="h-item h-scopus">
@@ -89,24 +61,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="h-val">${d.citations}</div>
     <div class="h-lbl">Citations in Google Scholar</div>
   </div>
-</div>
-<div class="gs"><h2>Citations per Year (Google Scholar)</h2>
-<div class="stats">
-  <div class="stat"><div class="num">${d.citations}</div><div class="lbl">Citations</div><div class="sub">All</div></div>
-  <div class="stat"><div class="num">${d.citations_since}</div><div class="lbl">Citations</div><div class="sub">Since 2021</div></div>
-  <div class="stat"><div class="num">${d.hindex}</div><div class="lbl">h-index</div><div class="sub">All &middot; Since 2021</div></div>
-  <div class="stat"><div class="num">${d.i10index}</div><div class="lbl">i10-index</div><div class="sub">All &middot; Since 2021</div></div>
-</div></div>
-<div class="chart-wrap"><div class="y-axis">${steps.map(s => {
-  const pct = (s / roundUp) * 100;
-  return '<div class="yl" style="bottom:'+pct+'%">'+s+'</div><div class="yln" style="bottom:'+pct+'%"></div>';
-}).join('')}</div>
-<div class="bars">${years.map(y => {
-  const pct = (y.c / roundUp) * 100 || 1;
-  return '<div class="bar-wrap"><div class="bar" style="height:'+pct+'%;background:#1a73e8"><div class="tip">'+y.c+'</div></div></div>';
-}).join('')}</div>
-<div class="year-labels">${years.map(y => '<span>'+y.y+'</span>').join('')}</div></div>`;
-
+</div>`;
   } catch (e) {
     document.getElementById('content').innerHTML = '<div class="error">Gagal memuat data: ' + e.message + '</div>';
     document.getElementById('updated').textContent = '—';

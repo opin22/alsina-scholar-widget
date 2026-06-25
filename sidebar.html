@@ -7,29 +7,15 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:transparent;padding:0}
 .card{background:#fff;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.1);padding:10px}
-.hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;margin-bottom:8px}
-.h-item{border-radius:4px;padding:6px 3px;text-align:center;color:#fff}
-.h-item .h-icon{font-size:12px;margin-bottom:1px}
-.h-item .h-val{font-size:13px;font-weight:700;line-height:1.1}
-.h-item .h-lbl{font-size:6px;opacity:.9;margin-top:1px;line-height:1.1}
+.hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px}
+.h-item{border-radius:4px;padding:8px 3px;text-align:center;color:#fff}
+.h-item .h-icon{font-size:13px;margin-bottom:2px}
+.h-item .h-val{font-size:14px;font-weight:700;line-height:1.1}
+.h-item .h-lbl{font-size:7px;opacity:.9;margin-top:1px;line-height:1.1}
 .h-scopus{background:#0b6fa4}
 .h-sinta{background:#ca8e0a}
 .h-impact{background:#c0392b}
 .h-gs{background:#27ae60}
-.chart-wrap{position:relative;padding-top:6px;margin:0 0 0 24px}
-.y-axis{position:absolute;left:-24px;top:0;bottom:0;width:24px}
-.y-axis .yl{position:absolute;right:3px;font-size:7px;color:#999;transform:translateY(50%)}
-.y-axis .yln{position:absolute;left:24px;right:0;border-bottom:1px solid #eee;pointer-events:none}
-.bars{position:relative;height:80px;display:flex;align-items:flex-end;gap:2px}
-.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
-.bar{width:100%;border-radius:2px 2px 0 0;cursor:default;min-height:1px;transition:opacity .15s}
-.bar:hover{opacity:.8}
-.bar .tip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#222;color:#fff;font-size:7px;padding:1px 3px;border-radius:2px;white-space:nowrap;opacity:0;transition:opacity .15s;pointer-events:none;margin-bottom:2px}
-.bar:hover .tip{opacity:1}
-.year-labels{display:flex;gap:2px;margin-top:1px}
-.year-labels span{flex:1;text-align:center;font-size:7px;color:#999}
-.footer{margin-top:4px;padding-top:3px;border-top:1px solid #eee;font-size:7px;color:#aaa;text-align:center}
-.footer a{color:#1a73e8;text-decoration:none}
 .loading{text-align:center;color:#999;padding:15px 0;font-size:10px}
 .error{color:#d32f2f;text-align:center;padding:10px;font-size:10px}
 </style>
@@ -37,7 +23,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <body>
 <div class="card">
   <div id="content"><div class="loading">Memuat…</div></div>
-  <div class="footer">Updated: <span id="updated">—</span> &middot; <a href="https://scholar.google.com/citations?user=TxioLDYAAAAJ" target="_blank">GS</a></div>
 </div>
 <script>
 (async () => {
@@ -45,11 +30,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     const res = await fetch('data.json?_=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
-    document.getElementById('updated').textContent = d.updated || '—';
-    const years = d.years || [];
-    const mx = Math.max(...years.map(y => y.c), 1);
-    const ru = Math.ceil(mx / 50) * 50 || 100;
-    const st = [0, ru * 0.25, ru * 0.5, ru * 0.75, ru];
     document.getElementById('content').innerHTML = `
 <div class="hero">
   <div class="h-item h-scopus">
@@ -72,10 +52,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="h-val">${d.citations}</div>
     <div class="h-lbl">Scholar</div>
   </div>
-</div>
-<div class="chart-wrap"><div class="y-axis">${st.map(s => { const p = (s/ru)*100; return '<div class="yl" style="bottom:'+p+'%">'+s+'</div><div class="yln" style="bottom:'+p+'%"></div>'; }).join('')}</div>
-<div class="bars">${years.map(y => { const p = (y.c/ru)*100||1; return '<div class="bar-wrap"><div class="bar" style="height:'+p+'%;background:#1a73e8"><div class="tip">'+y.c+'</div></div></div>'; }).join('')}</div>
-<div class="year-labels">${years.map(y => '<span>'+y.y+'</span>').join('')}</div></div>`;
+</div>`;
   } catch (e) {
     document.getElementById('content').innerHTML = '<div class="error">Gagal: ' + e.message + '</div>';
   }
