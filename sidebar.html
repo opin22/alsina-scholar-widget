@@ -52,7 +52,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     </div>
     <div class="chart-wrap"><div class="y-axis">${steps.map(s => {
       const pct = (s / roundUp) * 100;
-      return `<div class="yl" style="bottom:${pct}%">${s}</div><div class="yln" style="bottom:${pct}%"></div>`;
+      return `<div class="yl" style="bottom:${pct}%">${s}</div>${s > 0 ? `<div class="yln" style="bottom:${pct}%"></div>` : ''}`;
     }).join('')}</div>
     <div class="bars">${years.map(y => {
       const pct = (y.c / roundUp) * 100 || 1;
