@@ -6,16 +6,21 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:transparent}
-.card{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:6px}
-.hero{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px}
-.h-item{border-radius:3px;padding:5px 2px;text-align:center;color:#fff}
-.h-item .h-icon{font-size:11px;margin-bottom:1px}
-.h-item .h-val{font-size:12px;font-weight:700;line-height:1.1}
-.h-item .h-lbl{font-size:6px;opacity:.9;margin-top:0;line-height:1}
-.h-scopus{background:#0b6fa4}
-.h-sinta{background:#ca8e0a}
-.h-impact{background:#c0392b}
-.h-gs{background:#27ae60}
+.card{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:8px 10px}
+.stats{display:flex;gap:10px;margin-bottom:8px;justify-content:center;flex-wrap:wrap}
+.stat{text-align:center;min-width:40px}
+.stat .num{font-size:15px;font-weight:700;color:#1a73e8;line-height:1}
+.stat .lbl{font-size:8px;color:#666;margin-top:1px}
+.stat .sub{font-size:7px;color:#999}
+.chart-wrap{position:relative;margin:0 0 0 26px;height:80px}
+.y-axis{position:absolute;left:-26px;top:0;bottom:0;width:26px}
+.y-axis .yl{position:absolute;right:4px;font-size:7px;color:#888;transform:translateY(50%)}
+.y-axis .yln{position:absolute;left:26px;right:0;border-bottom:1px solid #f0f0f0;pointer-events:none}
+.bars{display:flex;align-items:flex-end;gap:3px;height:100%}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;position:relative}
+.bar{width:100%;border-radius:2px 2px 0 0;cursor:default}
+.year-labels{display:flex;gap:3px;margin-top:2px}
+.year-labels span{flex:1;text-align:center;font-size:7px;color:#999}
 .loading{text-align:center;color:#999;padding:15px 0;font-size:10px}
 .error{color:#d32f2f;text-align:center;padding:10px;font-size:10px}
 </style>
@@ -30,29 +35,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     const res = await fetch('data.json?_=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
-    document.getElementById('content').innerHTML = `
-<div class="hero">
-  <div class="h-item h-scopus">
-    <div class="h-icon">&#128218;</div>
-    <div class="h-val"><a href="https://drive.google.com/file/d/1av2ykkPbgM9BW9CZ_uXf098YXFBO7G2Z/view?usp=sharing" target="_blank" rel="noopener" style="color:#fff;text-decoration:none">${d.scopus_citedness ?? '&mdash;'}</a></div>
-    <div class="h-lbl">Scopus</div>
-  </div>
-  <div class="h-item h-sinta">
-    <div class="h-icon">&#9733;</div>
-    <div class="h-val">${d.sinta_rank ?? '&mdash;'}</div>
-    <div class="h-lbl">Sinta</div>
-  </div>
-  <div class="h-item h-impact">
-    <div class="h-icon">&#128200;</div>
-    <div class="h-val">${d.sinta_impact ?? '&mdash;'}</div>
-    <div class="h-lbl">Impact</div>
-  </div>
-  <div class="h-item h-gs">
-    <div class="h-icon">&#127891;</div>
-    <div class="h-val">${d.citations}</div>
-    <div class="h-lbl">Scholar</div>
-  </div>
-</div>`;
+
+    const years = d.years || [];
+    const maxVal = Math.max(...years.map(y => y.c), 1);
+    const roundUp = Math.ceil(maxVal / 50) * 50 || 100;
+    const steps = [0, roundUp * 0.5, roundUp];
+
+    const html = `<div class="stats">
+      <div class="stat"><div class="num">${d.citations}</div><div class="lbl">Citations</div><div class="sub">All</div></div>
+      <div class="stat"><div class="num">${d.citations_since}</div><div class="lbl">Citations</div><div class="sub">Since 2021</div></div>
+      <div class="stat"><div class="num">${d.hindex}</div><div class="lbl">h-index</div><div class="sub">All · Since</div></div>
+      <div class="stat"><div class="num">${d.i10index}</div><div class="lbl">i10-index</div><div class="sub">All · Since</div></div>
+    </div>
+    <div class="chart-wrap"><div class="y-axis">${steps.map(s => {
+      const pct = (s / roundUp) * 100;
+      return `<div class="yl" style="bottom:${pct}%">${s}</div><div class="yln" style="bottom:${pct}%"></div>`;
+    }).join('')}</div>
+    <div class="bars">${years.map(y => {
+      const pct = (y.c / roundUp) * 100 || 1;
+      return `<div class="bar-wrap"><div class="bar" style="height:${pct}%;background:#1a73e8" title="${y.y}: ${y.c} citations"></div></div>`;
+    }).join('')}</div>
+    <div class="year-labels">${years.map(y => `<span>${y.y}</span>`).join('')}</div></div>`;
+
+    document.getElementById('content').innerHTML = html;
   } catch (e) {
     document.getElementById('content').innerHTML = '<div class="error">Gagal: ' + e.message + '</div>';
   }
