@@ -1,4 +1,4 @@
-import cloudscraper, re, json, os, sys, time
+import cloudscraper, re, json, os, sys, time, requests
 from datetime import date
 from bs4 import BeautifulSoup
 
@@ -12,12 +12,8 @@ def load_existing():
             return json.load(f)
     return {}
 
-def scrape_gs(scraper):
-    resp = scraper.get(
-        f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
-        timeout=30,
-    )
-    soup = BeautifulSoup(resp.text, "html.parser")
+def parse_gs_page(html):
+    soup = BeautifulSoup(html, "html.parser")
     c = h = i10 = 0; cs = hs = i10s = 0
     tbl = soup.find("table", id="gsc_rsb_st")
     if tbl:
@@ -44,9 +40,41 @@ def scrape_gs(scraper):
         years.sort(key=lambda x: x["y"])
     return {"citations": c, "citations_since": cs, "hindex": h, "i10index": i10, "years": years}
 
-def scrape_sinta(scraper):
+def scrape_gs():
+    attempts = 0
+    while attempts < 3:
+        try:
+            scraper = cloudscraper.create_scraper()
+            resp = scraper.get(
+                f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
+                timeout=30,
+            )
+            gs = parse_gs_page(resp.text)
+            if gs["citations"] > 0:
+                print(f"GS OK (cloudscraper): citations={gs['citations']}")
+                return gs
+        except Exception as e:
+            print(f"GS cloudscraper attempt {attempts+1}: {e}", file=sys.stderr)
+        try:
+            resp = requests.get(
+                f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"},
+                timeout=30,
+            )
+            gs = parse_gs_page(resp.text)
+            if gs["citations"] > 0:
+                print(f"GS OK (requests): citations={gs['citations']}")
+                return gs
+        except Exception as e:
+            print(f"GS requests attempt {attempts+1}: {e}", file=sys.stderr)
+        attempts += 1
+        time.sleep(5)
+    return {"citations": 0, "citations_since": 0, "hindex": 0, "i10index": 0, "years": []}
+
+def scrape_sinta():
     result = {}
     try:
+        scraper = cloudscraper.create_scraper()
         resp = scraper.get(
             f"https://sinta.kemdiktisaintek.go.id/journals/profile/{SINTA_JOURNAL_ID}",
             timeout=20,
@@ -56,6 +84,7 @@ def scrape_sinta(scraper):
         if len(nums) >= 3:
             result["sinta_impact"] = float(nums[0].get_text(strip=True))
             result["sinta_rank"] = nums[2].get_text(strip=True)
+            print(f"SINTA OK: rank={result['sinta_rank']} impact={result['sinta_impact']}")
     except Exception as e:
         print(f"SINTA scrape failed: {e}", file=sys.stderr)
     return result
@@ -63,24 +92,13 @@ def scrape_sinta(scraper):
 existing = load_existing()
 out = dict(existing)
 
-for attempt in range(3):
-    try:
-        scraper = cloudscraper.create_scraper()
-        gs = scrape_gs(scraper)
-        if gs["citations"] > 0:
-            out.update(gs)
-            print(f"GS OK: citations={gs['citations']}")
-            break
-        else:
-            print(f"GS attempt {attempt+1}: got zeros", file=sys.stderr)
-    except Exception as e:
-        print(f"GS attempt {attempt+1}: {e}", file=sys.stderr)
-    time.sleep(5)
+gs = scrape_gs()
+if gs["citations"] > 0:
+    out.update(gs)
 
-sinta = scrape_sinta(cloudscraper.create_scraper())
+sinta = scrape_sinta()
 if sinta:
     out.update(sinta)
-    print(f"SINTA OK: rank={sinta.get('sinta_rank','?')} impact={sinta.get('sinta_impact','?')}")
 
 out["updated"] = date.today().isoformat()
 if not out.get("years"):
