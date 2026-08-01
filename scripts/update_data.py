@@ -41,6 +41,19 @@ def parse_gs_page(html):
     return {"citations": c, "citations_since": cs, "hindex": h, "i10index": i10, "years": years}
 
 def scrape_gs():
+    worker_url = os.environ.get("GS_WORKER_URL")
+    if worker_url:
+        try:
+            resp = requests.get(worker_url, timeout=60)
+            gs = resp.json()
+            if gs.get("citations", 0) > 0:
+                print(f"GS OK (worker): citations={gs['citations']}")
+                return gs
+            else:
+                print(f"GS worker returned 0 or error: {gs}", file=sys.stderr)
+        except Exception as e:
+            print(f"GS worker failed: {e}", file=sys.stderr)
+
     attempts = 0
     while attempts < 3:
         try:

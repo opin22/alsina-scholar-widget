@@ -22,6 +22,8 @@ jobs:
           python-version: '3.12'
       - run: pip install cloudscraper requests beautifulsoup4 lxml
       - run: python scripts/update_data.py
+        env:
+          GS_WORKER_URL: ${{ secrets.GS_WORKER_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
