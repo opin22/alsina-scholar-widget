@@ -1,1 +1,40 @@
-{"citations": 425, "citations_since": 413, "hindex": 10, "i10index": 13, "sinta_rank": "Sinta 2", "sinta_impact": 0.714286, "scopus_citedness": 2, "updated": "2026-07-10", "years": [{"y": 2020, "c": 7}, {"y": 2021, "c": 19}, {"y": 2022, "c": 37}, {"y": 2023, "c": 62}, {"y": 2024, "c": 97}, {"y": 2025, "c": 110}, {"y": 2026, "c": 88}]}
+{
+  "citations": 447,
+  "citations_since": 434,
+  "hindex": 10,
+  "i10index": 14,
+  "sinta_rank": "Sinta 2",
+  "sinta_impact": 0.714286,
+  "scopus_citedness": 2,
+  "updated": "2026-08-01",
+  "years": [
+    {
+      "y": 2020,
+      "c": 0
+    },
+    {
+      "y": 2021,
+      "c": 0
+    },
+    {
+      "y": 2022,
+      "c": 0
+    },
+    {
+      "y": 2023,
+      "c": 0
+    },
+    {
+      "y": 2024,
+      "c": 0
+    },
+    {
+      "y": 2025,
+      "c": 0
+    },
+    {
+      "y": 2026,
+      "c": 0
+    }
+  ]
+}
