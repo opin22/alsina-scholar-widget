@@ -2,9 +2,18 @@ import cloudscraper, re, json, os, sys, time, requests
 from datetime import date
 from bs4 import BeautifulSoup
 
+def make_scraper():
+    try:
+        from curl_cffi import requests as cr
+        return cr
+    except ImportError:
+        return None
+
 SCHOLAR_ID = "TxioLDYAAAAJ"
 SINTA_JOURNAL_ID = "13830"
 DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data.json")
+GS_URL = f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en"
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
 
 def load_existing():
     if os.path.exists(DATA_FILE):
@@ -41,6 +50,7 @@ def parse_gs_page(html):
     return {"citations": c, "citations_since": cs, "hindex": h, "i10index": i10, "years": years}
 
 def scrape_gs():
+    cr = make_scraper()
     worker_url = os.environ.get("GS_WORKER_URL")
     if worker_url:
         try:
@@ -54,33 +64,36 @@ def scrape_gs():
         except Exception as e:
             print(f"GS worker failed: {e}", file=sys.stderr)
 
-    attempts = 0
-    while attempts < 3:
+    for attempt in range(3):
+        # 1) curl_cffi with full Chrome TLS impersonation (best vs bot detection)
+        if cr is not None:
+            try:
+                resp = cr.get(GS_URL, impersonate="chrome", timeout=30)
+                gs = parse_gs_page(resp.text)
+                if gs["citations"] > 0:
+                    print(f"GS OK (curl_cffi): citations={gs['citations']}")
+                    return gs
+            except Exception as e:
+                print(f"GS curl_cffi attempt {attempt+1}: {e}", file=sys.stderr)
+        # 2) cloudscraper
         try:
             scraper = cloudscraper.create_scraper()
-            resp = scraper.get(
-                f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
-                timeout=30,
-            )
+            resp = scraper.get(GS_URL, timeout=30)
             gs = parse_gs_page(resp.text)
             if gs["citations"] > 0:
                 print(f"GS OK (cloudscraper): citations={gs['citations']}")
                 return gs
         except Exception as e:
-            print(f"GS cloudscraper attempt {attempts+1}: {e}", file=sys.stderr)
+            print(f"GS cloudscraper attempt {attempt+1}: {e}", file=sys.stderr)
+        # 3) plain requests
         try:
-            resp = requests.get(
-                f"https://scholar.google.com/citations?user={SCHOLAR_ID}&hl=en",
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"},
-                timeout=30,
-            )
+            resp = requests.get(GS_URL, headers={"User-Agent": UA}, timeout=30)
             gs = parse_gs_page(resp.text)
             if gs["citations"] > 0:
                 print(f"GS OK (requests): citations={gs['citations']}")
                 return gs
         except Exception as e:
-            print(f"GS requests attempt {attempts+1}: {e}", file=sys.stderr)
-        attempts += 1
+            print(f"GS requests attempt {attempt+1}: {e}", file=sys.stderr)
         time.sleep(5)
     return {"citations": 0, "citations_since": 0, "hindex": 0, "i10index": 0, "years": []}
 

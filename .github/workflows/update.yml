@@ -20,7 +20,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install cloudscraper requests beautifulsoup4 lxml
+      - run: pip install cloudscraper requests beautifulsoup4 lxml curl_cffi
       - run: python scripts/update_data.py
         env:
           GS_WORKER_URL: ${{ secrets.GS_WORKER_URL }}
