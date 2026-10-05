@@ -1,40 +1,40 @@
 {
-  "citations": 447,
-  "citations_since": 434,
-  "hindex": 10,
-  "i10index": 14,
+  "citations": 484,
+  "citations_since": 473,
+  "hindex": 11,
+  "i10index": 16,
   "sinta_rank": "Sinta 2",
   "sinta_impact": 0.714286,
   "scopus_citedness": 2,
-  "updated": "2026-08-01",
+  "updated": "2026-10-05",
   "years": [
     {
       "y": 2020,
-      "c": 0
+      "c": 7
     },
     {
       "y": 2021,
-      "c": 0
+      "c": 19
     },
     {
       "y": 2022,
-      "c": 0
+      "c": 35
     },
     {
       "y": 2023,
-      "c": 0
+      "c": 62
     },
     {
       "y": 2024,
-      "c": 0
+      "c": 94
     },
     {
       "y": 2025,
-      "c": 0
+      "c": 102
     },
     {
       "y": 2026,
-      "c": 0
+      "c": 160
     }
   ]
 }
