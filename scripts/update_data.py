@@ -126,7 +126,11 @@ sinta = scrape_sinta()
 if sinta:
     out.update(sinta)
 
-out["updated"] = date.today().isoformat()
+# Tanggal "updated" HANYA dinaikkan jika scrape Google Scholar berhasil.
+# Di GitHub Actions scrape selalu gagal (IP datacenter diblokir Scholar);
+# tanpa guard ini Pages menampilkan angka lama dengan tanggal hari ini (menyesatkan).
+if gs["citations"] > 0:
+    out["updated"] = date.today().isoformat()
 if not out.get("years"):
     out["years"] = [{"y": y, "c": 0} for y in range(2020, 2027)]
 
