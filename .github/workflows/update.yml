@@ -1,34 +1,27 @@
-name: Update Scholar Data
+# Deploy = konten master PERSIS (single writer: Task Scheduler lokal via IP rumah).
+# Scrape Scholar DIHAPUS dari Actions: IP datacenter umumnya diblokir Scholar, dan
+# kalau sesekali lolos, angkanya melenceng dari repo master sehingga widget di
+# halaman OJS jadi beda (kasus hero=500 vs sidebar=497 pada 2026-10-20/21).
+# Update data kini eksklusif dari C:\Users\lynxe\alsina-widget\update.ps1 (12:30 harian).
+
+name: Deploy alsina-scholar-widget
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
-    - cron: '0 12 * * *'
-    - cron: '0 18 * * *'
-  workflow_dispatch:
   push:
     branches: [master]
+  workflow_dispatch:
 
 permissions:
-  contents: write
   pages: write
   id-token: write
 
 jobs:
-  scrape:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install cloudscraper requests beautifulsoup4 lxml curl_cffi
-      - run: python scripts/update_data.py
-        env:
-          GS_WORKER_URL: ${{ secrets.GS_WORKER_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - id: deploy
-        uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v4
