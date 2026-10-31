@@ -1,12 +1,12 @@
 {
-  "citations": 525,
-  "citations_since": 514,
-  "hindex": 12,
+  "citations": 526,
+  "citations_since": 515,
+  "hindex": 13,
   "i10index": 16,
   "sinta_rank": "Sinta 2",
   "sinta_impact": 0.714286,
   "scopus_citedness": 3,
-  "updated": "2026-10-30",
+  "updated": "2026-10-31",
   "years": [
     {
       "y": 2020,
@@ -34,7 +34,7 @@
     },
     {
       "y": 2026,
-      "c": 201
+      "c": 202
     }
   ]
 }
